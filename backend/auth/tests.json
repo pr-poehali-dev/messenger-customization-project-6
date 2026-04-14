@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Register with missing fields",
+      "method": "POST",
+      "path": "/register",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "Укажите email или номер телефона"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register without captcha",
+      "method": "POST",
+      "path": "/register",
+      "body": {"email": "test@volta.app", "password": "Test1234!", "display_name": "Test User"},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "Пройдите проверку капчи"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login missing fields",
+      "method": "POST",
+      "path": "/login",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "Укажите логин и пароль"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get me without token",
+      "method": "GET",
+      "path": "/me",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "Не авторизован"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unknown route",
+      "method": "GET",
+      "path": "/unknown",
+      "expectedStatus": 404
+    }
+  ]
+}
