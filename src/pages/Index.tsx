@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar, { Section } from '@/components/messenger/Sidebar';
 import ChatList from '@/components/messenger/ChatList';
 import ChatWindow from '@/components/messenger/ChatWindow';
@@ -8,10 +8,40 @@ import ChannelsView from '@/components/messenger/ChannelsView';
 import SearchView from '@/components/messenger/SearchView';
 import SettingsView from '@/components/messenger/SettingsView';
 import ProfileView from '@/components/messenger/ProfileView';
+import AuthScreen from '@/components/auth/AuthScreen';
+import { User, getStoredToken, apiGetMe, clearToken } from '@/lib/auth';
 
 export default function Index() {
   const [section, setSection] = useState<Section>('chats');
   const [activeChat, setActiveChat] = useState<string | null>('1');
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const token = getStoredToken();
+    if (token) {
+      apiGetMe(token)
+        .then(user => { setAuthUser(user); setAuthChecked(true); })
+        .catch(() => { clearToken(); setAuthChecked(true); });
+    } else {
+      setAuthChecked(true);
+    }
+  }, []);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(var(--background))' }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl" style={{ background: 'var(--accent-green)', color: '#000' }}>V</div>
+          <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--accent-green)', borderTopColor: 'transparent' }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!authUser) {
+    return <AuthScreen onAuth={(user, token) => { setAuthUser(user); }} />;
+  }
 
   const handleNavigate = (s: Section) => {
     setSection(s);
@@ -31,7 +61,7 @@ export default function Index() {
       case 'channels': return <ChannelsView />;
       case 'search': return <SearchView />;
       case 'settings': return <SettingsView />;
-      case 'profile': return <ProfileView />;
+      case 'profile': return <ProfileView user={authUser} onLogout={() => { clearToken(); setAuthUser(null); }} />;
       default: return null;
     }
   };
